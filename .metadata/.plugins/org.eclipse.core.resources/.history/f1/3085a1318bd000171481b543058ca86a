@@ -1,0 +1,20 @@
+package es.upm.fi.pdl;
+
+import java.io.IOException;
+
+public class App {
+
+	
+
+   public static void main( String args[] ) throws IOException {
+	   ManejadorFicheros m = new ManejadorFicheros();
+	   m.leerFichero()
+
+      
+
+      
+      
+      
+      
+   }
+}

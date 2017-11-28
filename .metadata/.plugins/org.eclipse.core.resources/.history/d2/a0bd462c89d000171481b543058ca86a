@@ -1,0 +1,6 @@
+package es.upm.fi.pdl;
+
+public class Token {
+	
+private identificador; 
+}

@@ -1,0 +1,56 @@
+package es.upm.fi.pdl;
+
+import java.io.FileReader;
+import java.io.IOException;
+
+public class AnalizadorLexico {
+	static int caracteresRestantes;//en caso de ser -1 se ha llegado a final de fichero
+	static boolean tokenEncontrado;
+	
+	public AnalizadorLexico() {
+		caracteresRestantes = 0;
+		tokenEncontrado = false;
+	}
+	
+	public Token ejecutar(FileReader fr) throws IOException {
+		tokenEncontrado = false; 
+		Token t = null;
+		Estado estadoActual = new Estado();//empezamos en el estado 0
+		char [] siguienteCaracter = new char[1]; 
+		char [] lexema = new char[1024];//esto tal vez lo podríamos recogerlo de un fichero de configuración
+		
+		caracteresRestantes = fr.read(siguienteCaracter);
+		do {
+			caracteresRestantes = fr.read(siguienteCaracter);
+			System.out.println(siguienteCaracter[0]);
+		}
+			while((caracteresRestantes != -1) && !tokenEncontrado );
+        if (fr != null) {fr.close();}
+        //importante cerrar descriptor de fichero (FileReader)
+	     return t;
+	}
+	
+	private boolean otroCaracter(char c) {
+		boolean esOtroCaracter = false;
+		if (c == ' ' || c == ')' || c == ';'|| c == '('|| c =='\r' || c =='}') {//aqui no se contempla el caso de que sea eof
+			esOtroCaracter = true;
+		}
+		return esOtroCaracter;
+	}
+
+	private Token genToken(String string) {
+		tokenEncontrado = true;
+		System.out.println(string);
+		return null;
+		
+	}
+	private Token genToken(String string, char[] posibleValorToken) {
+		tokenEncontrado = true;
+		System.out.println(string);
+		return null;
+		
+	}
+
+
+
+}

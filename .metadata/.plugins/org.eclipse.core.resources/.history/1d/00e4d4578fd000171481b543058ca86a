@@ -1,0 +1,59 @@
+package es.upm.fi.pdl;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
+
+public class ManejadorFicheros {
+	/**
+	 * @exception Input/output
+	 * @param ruta del fichero a abrir
+	 */
+	public void abrirFichero() {
+		abrirFichero("..\\entrada\\codigo_50.js");
+	}
+	
+	public void abrirFichero(String fileName) {
+		try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
+
+			stream.forEach(System.out::println);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}	
+	public static FileReader leerFichero(String rutaArchivo) throws IOException{
+		
+		FileReader inputStream = null;       
+        try {           
+        	inputStream = new FileReader("src/es/upm/fi/pdl/entrada/codigo_50.js");
+            
+            return inputStream;
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }//finally
+			
+	}//leerFichero
+	
+public static void escribirFichero(String rutaArchivo, String texto) throws IOException{
+				
+        FileWriter outputStream = null;
+        try {                   	
+            outputStream = new FileWriter("src/es/upm/fi/pdl/salida/tokens.txt");
+            outputStream.write("Mufasa ");
+            
+        } finally {
+            if (outputStream != null) {
+                outputStream.close();
+            }
+        }
+			
+	}	
+}

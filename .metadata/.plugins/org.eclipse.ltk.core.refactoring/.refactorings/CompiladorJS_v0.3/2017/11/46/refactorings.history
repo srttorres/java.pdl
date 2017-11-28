@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move package &apos;es.upm.fi.pdl&apos; to &apos;CompiladorJS_v0.2/src&apos;&#x0D;&#x0A;- Original project: &apos;CompiladorJS_v0.3&apos;&#x0D;&#x0A;- Destination element: &apos;CompiladorJS_v0.2/src&apos;&#x0D;&#x0A;- Original element: &apos;CompiladorJS_v0.3/src/es.upm.fi.pdl&apos;&#x0D;&#x0A;- Update references to refactored element" description="Move package" destination="=CompiladorJS_v0.2/src" element1="/src&lt;es.upm.fi.pdl" flags="589830" fragments="1" id="org.eclipse.jdt.ui.move" policy="org.eclipse.jdt.ui.movePackages" stamp="1510822883808" version="1.0"/>
+</session>

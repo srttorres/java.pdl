@@ -1,0 +1,21 @@
+package es.upm.fi.pdl;
+
+import java.io.IOException;
+
+public class App {
+
+	
+
+   public static void main( String args[] ) throws IOException {
+	   ManejadorFicheros m = new ManejadorFicheros();
+	   AnalizadorLexico AL = new AnalizadorLexico();
+	   AL.ejecutar(m.leerFichero("src/es/upm/fi/pdl/entrada/codigo_50.js"));
+
+      
+
+      
+      
+      
+      
+   }
+}

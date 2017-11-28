@@ -1,0 +1,85 @@
+package es.upm.fi.pdl;
+
+import java.io.FileReader;
+import java.io.IOException;
+
+public class AnalizadorLexico {
+	static int caracteresRestantes;//en caso de ser -1 se ha llegado a final de fichero
+	static boolean tokenEncontrado;
+	
+	public AnalizadorLexico() {
+		caracteresRestantes = 0;
+		tokenEncontrado = false;
+	}
+	
+	public Token ejecutar(FileReader fr) throws IOException {
+		tokenEncontrado = false; 
+		Token t = null;
+		Estado estadoActual = new Estado();//empezamos en el estado 0
+		char [] siguienteCaracter = new char[1]; 
+		char [] lexema = new char[512];//esto tal vez lo podríamos recogerlo de un fichero de configuración		
+		do {
+			System.out.println(siguienteCaracter[0]);//BEACON
+			caracteresRestantes = fr.read(siguienteCaracter);
+			estadoActual = aplicarMatrizTransicion(siguienteCaracter[0], estadoActual);
+			
+		}
+			while((caracteresRestantes != -1) && !tokenEncontrado );
+        if (fr != null) {fr.close();}
+        //importante cerrar descriptor de fichero (FileReader y FileWriter)
+	     return t;
+	}
+	
+	private Estado aplicarMatrizTransicion(char c, Estado estadoActual) {
+		Estado estadoSiguiente = new Estado();
+		switch (estadoActual.getEstado()) {
+		case 0: 
+			//inicio
+		case 9:
+			//cadena
+		case 21:
+			//suma o asignación con suma
+		case 22:
+			//asignación o operador relacional igual
+		case 23:
+			//
+		case 24:
+			//
+		case 25:
+			//
+		case 70:
+			
+		default:
+			System.out.println("AL.aplivarMatrizTransición(): Ha entrado en un estado incorrecto %d",estadoActual.getEstado());
+		}
+		return estadoSiguiente;
+	}
+
+	private boolean otroCaracter(char c, Estado e) {
+		boolean esOtroCaracter = false;
+		switch (e.getEstado()) {
+			case 0: 
+				
+		}
+		if (c == ' ' || c == ')' || c == ';'|| c == '('|| c =='\r' || c =='}') {//aqui no se contempla el caso de que sea eof
+			esOtroCaracter = true;
+		}
+		return esOtroCaracter;
+	}
+
+	private Token genToken(String string) {
+		tokenEncontrado = true;
+		System.out.println(string);
+		return null;
+		
+	}
+	private Token genToken(String string, char[] posibleValorToken) {
+		tokenEncontrado = true;
+		System.out.println(string);
+		return null;
+		
+	}
+
+
+
+}

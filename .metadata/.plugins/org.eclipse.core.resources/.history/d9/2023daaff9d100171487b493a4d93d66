@@ -1,0 +1,6 @@
+package es.upm.fi.pdl;
+
+public class Estado {
+private int numero;
+private String axioma;
+}
