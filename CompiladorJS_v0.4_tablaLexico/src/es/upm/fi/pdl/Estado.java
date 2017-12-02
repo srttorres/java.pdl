@@ -3,6 +3,7 @@ package es.upm.fi.pdl;
 public class Estado {
 	private int numero;
 	private String axioma;
+	private String lexema;
 	
 	public Estado() {
 		this.numero = 0;
@@ -10,6 +11,12 @@ public class Estado {
 	
 
 
+public String getLexema() {
+		return lexema;
+	}
+public void setLexema(String lexema) {
+		this.lexema = lexema;
+	}
 public int getEstado() {
 	return numero;
 }

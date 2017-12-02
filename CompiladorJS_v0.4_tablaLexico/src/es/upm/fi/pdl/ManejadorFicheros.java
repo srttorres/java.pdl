@@ -17,14 +17,14 @@ public class ManejadorFicheros {
 		
 		FileReader inputStream = null;       
         try {           
-        	inputStream = new FileReader("src/es/upm/fi/pdl/entrada/codigo_50.js");
+        	inputStream = new FileReader(rutaArchivo);
             
             return inputStream;
         } finally {
-            System.out.println("ManejadorFicheros.java/leerFichero==> El Stream está abierto :P");
+            //System.out.println("ManejadorFicheros.java/leerFichero==> Stream de lectura");
         }//finally
 			
-	}//leerFichero
+	}//getDescriptorEntrada	
 	/**
 	 * @exception Input/output
 	 * @param ruta del fichero a abrir
@@ -37,8 +37,19 @@ public static FileWriter getDescriptorSalida(String rutaArchivo) throws IOExcept
             outputStream = new FileWriter(rutaArchivo);            
             return outputStream;
         } finally {
-        	System.out.println("ManejadorFicheros.java/EscribirFichero==> El Stream está abierto :\\ convendría cerrarlo");
+        	//System.out.println("ManejadorFicheros.java/EscribirFichero==> Stream de escritura cerrado");
         }
 			
 	}	
+public static void cerrarDescriptorEntrada(FileReader fr) throws IOException {
+	fr.close();
+	//System.out.println("AnalizadorLexico.java/ejecutar==>Stream de lectura cerrado");
+}
+public static void cerrarDescriptorSalida(FileWriter fw) throws IOException {
+	fw.close();
+	//System.out.println("AnalizadorLexico.java/ejecutar==>Stream de lectura cerrado");
+}
+
+
+
 }
