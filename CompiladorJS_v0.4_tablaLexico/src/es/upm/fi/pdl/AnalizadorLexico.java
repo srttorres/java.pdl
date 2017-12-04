@@ -46,9 +46,8 @@ public class AnalizadorLexico {
 		String lexema = null;
 		do {			
 			caracteresRestantes = fr.read(siguienteCaracter);
-			lexema = Character.toString(siguienteCaracter[0]);
-			System.out.println(">>BEACON:"+siguienteCaracter[0]);
-			System.out.println(">>lexema:"+lexema);
+			lexema = lexema+Character.toString(siguienteCaracter[0]);			
+			System.out.println(">>lexema:"+lexema);		
 			estadoActual = aplicarMatrizTransicion(siguienteCaracter[0], estadoActual, fr);
 			lexema = estadoActual.getLexema();			
 		}
@@ -106,14 +105,14 @@ public class AnalizadorLexico {
 				comienzoConcatenacion = true;break;				
 			case '+'://comprobación otroCaracter = true then OP_ARIT_SUMA else ya se tratará en el estado 21
 				estadoSiguiente.setEstado(21);				
-				if (otroCaracter(fr,estadoSiguiente)) {
+				if (otroCaracter(fr,estadoSiguiente,' ')) {
 					estadoSiguiente.setEstado(51);
 					genToken(OP_ARIT_SUMA,null);
 				}
 				break;
 			case '='://comprobación otroCaracter = true then ASIG_SIMPLE else ya se tratará en el estado 22
 				estadoSiguiente.setEstado(22);
-				if (otroCaracter(fr,estadoSiguiente)) {
+				if (otroCaracter(fr,estadoSiguiente,' ')) {
 					estadoSiguiente.setEstado(61);
 					genToken(ASIG_SIMPLE,null);
 				}
@@ -141,10 +140,11 @@ public class AnalizadorLexico {
 				genError(400);break;//simbolo no soportado				
 			default://si no es un simbolo soportado, es una letra o un número
 				if(Character.isAlphabetic(c)) {
+					estadoActual.setLexema("");
 					estadoSiguiente.setEstado(23);
-					String primerCaracter = Character.toString(c);					
-					estadoActual.setLexema(primerCaracter);
-					System.out.printf("primerCaracter: %s\n",estadoActual.getLexema());
+					lexema = Character.toString(c);					
+					estadoSiguiente.setLexema(lexema);
+					System.out.printf(">>>>LEXEMA: %s\n",estadoSiguiente.getLexema());
 				}
 				if(Character.isDigit(c)) {
 					estadoSiguiente.setEstado(24);					
@@ -181,10 +181,25 @@ public class AnalizadorLexico {
 			
 			
 		case 23:/** */
-			if(Character.isAlphabetic(c)) {
-				estadoSiguiente.setEstado(70);				
-				estadoSiguiente.setLexema(estadoSiguiente.getLexema()+c);
+			if(Character.isAlphabetic(c) || Character.isDigit(c)) {
+				estadoSiguiente.setEstado(23);
+				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
+				estadoSiguiente.setLexema(estadoSiguiente.getLexema());
+				System.out.printf(">>>>LEXEMA: %s\n",estadoSiguiente.getLexema());
 			}
+			else {
+				//si es otro caracter, es decir, espacio, operador o otra cosa, se genera el token
+				System.out.println("comprobacion de otro caracter:");
+				if (otroCaracter(fr,estadoActual,c)){
+					lexema = estadoActual.getLexema();
+					estadoSiguiente.setLexema(estadoActual.getLexema());
+					estadoSiguiente.setEstado(80);
+					System.out.println("pr o id");
+					genToken(PALABRA_RESERVADA,lexema);
+					genToken(IDENTIFICADOR,lexema);
+				}
+			}
+
 			break;//case 23
 			
 			
@@ -210,7 +225,7 @@ public class AnalizadorLexico {
 			
 			
 		case 70:/**cadena, recibe caracter*/			
-			if (c=='"') {
+			if (c=='"') {				
 				estadoSiguiente.setEstado(71);				
 				genToken(CADENA,estadoActual.getLexema());
 				
@@ -233,8 +248,15 @@ public class AnalizadorLexico {
 	}
 
 
-
-	private boolean otroCaracter(FileReader f,Estado e) throws IOException {
+	/**
+	 * 
+	 * @param f FileReader. El puntero apunta al último caracter leido
+	 * @param e Estado
+	 * @param UltimoCaracterLeido. Porque f lee uno mas, lee el siguiente
+	 * @return true si es otro caracter para ese estado
+	 * @throws IOException
+	 */
+	private boolean otroCaracter(FileReader f,Estado e,char ultimoCaracterLeido) throws IOException {
 		//FALTA POR IMPLEMENTAR LA VERSION PROYECTADA
 		boolean esOtroCaracter = false;
 		char [] c = new char[1];
@@ -263,6 +285,9 @@ public class AnalizadorLexico {
 				break;//case 22
 			case 23:/** */
 				
+				if (ultimoCaracterLeido == ' ' || c[0] == '=' || c[0] == '+' || c[0] == '&' || c[0] == '(' || c[0] == ')' || c[0] == '{' ||c[0] == '}'|| c[0] == '\n' || c[0] == '\r') {
+					esOtroCaracter = true;
+				}
 				break;//case 23
 			case 24:/** */
 			
