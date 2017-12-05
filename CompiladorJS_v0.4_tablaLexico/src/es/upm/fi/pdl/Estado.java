@@ -4,7 +4,7 @@ public class Estado {
 	private int numero;
 	private String axioma;
 	private String lexema;
-	
+	private int valor;
 	public Estado() {
 		this.numero = 0;
 	}
@@ -28,5 +28,18 @@ public String getAxioma() {
 }
 public void setAxioma(String axioma) {
 	this.axioma = axioma;
+}
+
+
+
+public void setValor(int e) {
+	this.valor = e;
+	
+}
+
+
+
+public int getValor() {
+	return valor;
 }
 }

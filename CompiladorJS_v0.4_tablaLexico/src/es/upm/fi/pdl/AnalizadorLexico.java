@@ -3,6 +3,8 @@ package es.upm.fi.pdl;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AnalizadorLexico {
 	static int caracteresRestantes;//se inicializará a cero//en caso de ser -1 se ha llegado a final de fichero
@@ -10,27 +12,47 @@ public class AnalizadorLexico {
 	static Token tokenGenerado;
 	static boolean comienzoConcatenacion;//sirve para distinguir un caso de letras normales de uno de cadena
 	static FileWriter fw;
-	public static final int  EOF 				= 1;
-	public static final int  COMA 				= 3;
-	public static final int  PYCOMA				= 4;
-	public static final int  PARENTESIS_A 		= 5;
-	public static final int  PARENTESIS_C 		= 6;
-	public static final int  LLAVE_A			= 7;
-	public static final int  LLAVE_C			= 8;
-	public static final int  OP_ARIT_SUMA		= 51;
-	public static final int  OP_REL_IGUAL		= 52;
-	public static final int  OP_LOG_AND			= 53;
-	public static final int  ASIG_SIMPLE		= 61;
-	public static final int  ASIG_SUMA			= 62;	
-	public static final int  CADENA				= 71;
-	public static final int  PALABRA_RESERVADA	= 81;
-	public static final int  IDENTIFICADOR		= 82;	
-	public static final int  ENTERO				= 91;
+	static Map<String, Integer> diccionarioPR;
+	static TablaSimbolos tablaSimbolos = new TablaSimbolos();
+	static final int  EOF 				= 1;
+	static final int  COMA 				= 3;
+	static final int  PYCOMA				= 4;
+	static final int  PARENTESIS_A 		= 5;
+	static final int  PARENTESIS_C 		= 6;
+	static final int  LLAVE_A			= 7;
+	static final int  LLAVE_C			= 8;
+	static final int  OP_ARIT_SUMA		= 51;
+	static final int  OP_REL_IGUAL		= 52;
+	static final int  OP_LOG_AND			= 53;
+	static final int  ASIG_SIMPLE		= 61;
+	static final int  ASIG_SUMA			= 62;	
+	static final int  CADENA				= 71;
+	static final int  PALABRA_RESERVADA	= 81;
+	static final int  IDENTIFICADOR		= 82;	
+	static final int  ENTERO				= 91;
 		
 	public AnalizadorLexico() {
 		caracteresRestantes = 0;
 		tokenEncontrado = false;
 		comienzoConcatenacion = false;
+		diccionarioPR = new HashMap<String, Integer>();		
+		diccionarioPR.put("true",1);
+		diccionarioPR.put("false",2);
+		diccionarioPR.put("if",	3);
+		diccionarioPR.put("while",4);
+		diccionarioPR.put("do",5);
+		diccionarioPR.put("var",6);
+		diccionarioPR.put("bool",7);
+		diccionarioPR.put("chars",8);
+		diccionarioPR.put("int",9);
+		diccionarioPR.put("function",10);
+		diccionarioPR.put("prompt",11);
+		diccionarioPR.put("write",12);
+		diccionarioPR.put("return",13);
+		diccionarioPR.put("numero",14);
+		diccionarioPR.put("cadena",15);
+		diccionarioPR.put("booleano",16);
+		diccionarioPR.put("id",17);
 	}
 	/**
 	 * Llamada desde el Analizador Sintáctico en busca de un token (en la version 0.4 se llama desde el Programa principal App)
@@ -47,7 +69,7 @@ public class AnalizadorLexico {
 		do {			
 			caracteresRestantes = fr.read(siguienteCaracter);
 			lexema = lexema+Character.toString(siguienteCaracter[0]);			
-			System.out.println(">>lexema:"+lexema);		
+			//System.out.println(">>lexema:"+lexema);		
 			estadoActual = aplicarMatrizTransicion(siguienteCaracter[0], estadoActual, fr);
 			lexema = estadoActual.getLexema();			
 		}
@@ -112,10 +134,6 @@ public class AnalizadorLexico {
 				break;
 			case '='://comprobación otroCaracter = true then ASIG_SIMPLE else ya se tratará en el estado 22
 				estadoSiguiente.setEstado(22);
-				if (otroCaracter(fr,estadoSiguiente,' ')) {
-					estadoSiguiente.setEstado(61);
-					genToken(ASIG_SIMPLE,null);
-				}
 				break;
 			case '&':
 				estadoSiguiente.setEstado(25);
@@ -147,17 +165,23 @@ public class AnalizadorLexico {
 					System.out.printf(">>>>LEXEMA: %s\n",estadoSiguiente.getLexema());
 				}
 				if(Character.isDigit(c)) {
-					estadoSiguiente.setEstado(24);					
+					if(c=='0') {
+						genError(406);
+					}
+					estadoSiguiente.setEstado(24);
+					int valor = Integer.parseInt(Character.toString(c));					
+					estadoSiguiente.setValor(valor);																			
+					System.out.printf(">>>>VALOR: %s\n",estadoSiguiente.getValor());
 				}
 			}
 			break;//case 0
 			
 			
 		case 9:/**cadena, apertura de comillas*/			
-			if (c=='"') {//OJO CADENA VACIA
-				estadoSiguiente.setEstado(71);				
-				genToken(CADENA,estadoSiguiente.getLexema()+c);
-				genError(401);
+			if (c=='"') {//OJO CADENA VACIA				
+				if(lexema==null) {
+					genError(401);
+				}
 			}
 			else {
 				estadoActual.setLexema("");
@@ -174,9 +198,16 @@ public class AnalizadorLexico {
 			break;//case 21
 			
 			
-		case 22:/**asignación o operador relacional igual*/
-			estadoSiguiente.setEstado(52);
-			genToken(OP_REL_IGUAL,null);//porque se ha comprobado en el estado 0 si fuese otro caracter
+		case 22:/**asignación o operador relacional igual*/			
+			if (otroCaracter(fr,estadoActual,c)) {
+				estadoSiguiente.setEstado(61);
+				genToken(ASIG_SIMPLE,null);
+			}
+			else {
+				estadoSiguiente.setEstado(52);
+				genToken(OP_REL_IGUAL,null);//porque se ha comprobado en el estado 0 si fuese otro caracter
+			}			
+			
 			break;//case 22
 			
 			
@@ -188,30 +219,35 @@ public class AnalizadorLexico {
 				System.out.printf(">>>>LEXEMA: %s\n",estadoSiguiente.getLexema());
 			}
 			else {
-				//si es otro caracter, es decir, espacio, operador o otra cosa, se genera el token
-				System.out.println("comprobacion de otro caracter:");
+				//si es otro caracter, es decir, espacio, operador o otra cosa, se genera el token				
 				if (otroCaracter(fr,estadoActual,c)){
 					lexema = estadoActual.getLexema();
 					estadoSiguiente.setLexema(estadoActual.getLexema());
 					estadoSiguiente.setEstado(80);
-					System.out.println("pr o id");
-					genToken(PALABRA_RESERVADA,lexema);
-					genToken(IDENTIFICADOR,lexema);
+					if(diccionarioPR.containsKey(lexema)) {
+						genToken(PALABRA_RESERVADA,lexema);	
+					}
+					else if (tablaSimbolos.contieneID(lexema)) {
+						int punteroTS = tablaSimbolos.buscaID(lexema);
+						genToken(IDENTIFICADOR,Integer.toString(punteroTS));
+					}
+					else {
+						int punteroTS = tablaSimbolos.añadirEntrada(lexema);						
+						genToken(IDENTIFICADOR,Integer.toString(punteroTS));
+					}					
 				}
 			}
-
-			break;//case 23
-			
+			break;//case 23			
 			
 		case 24:/** */
-			if (c=='"') {
-				estadoSiguiente.setEstado(71);
-				System.out.println("HOLADOLAcas24"+estadoSiguiente.getLexema()+c);
-				genToken(CADENA,estadoSiguiente.getLexema()+c);				
+			if (!Character.isDigit(c) && otroCaracter(fr,estadoActual,c)) {
+				genToken(ENTERO,Integer.toString(estadoActual.getValor()));
 			}
-			else {
-				estadoSiguiente.setEstado(70);				
-				estadoSiguiente.setLexema(estadoSiguiente.getLexema()+c);
+			else {				
+				estadoSiguiente.setEstado(24);
+				int valor = estadoActual.getValor()*10 + Integer.parseInt(Character.toString(c));
+				estadoSiguiente.setValor(valor);
+				System.out.printf(">>>>VALOR: %s\n",estadoSiguiente.getValor());
 			}
 			break;//case 24
 			
@@ -259,48 +295,60 @@ public class AnalizadorLexico {
 	private boolean otroCaracter(FileReader f,Estado e,char ultimoCaracterLeido) throws IOException {
 		//FALTA POR IMPLEMENTAR LA VERSION PROYECTADA
 		boolean esOtroCaracter = false;
+		int caracteresRestantes = 0;
 		char [] c = new char[1];
-		FileReader faux = f;
-		int caracteresRestantes = faux.read(c);
-		if (caracteresRestantes != -1) {
-			System.out.println(">>AnalizadorLexico.java/otroCaracter()->c[1]="+c[0]);
-		
-			switch (e.getEstado()) {
-			case 9:/**cadena, apertura de comillas*/
-				
-				break;//case 9
-			case 21:/**suma o asignación con suma*/
-			//	aqui podemos ver si es un =
+		FileReader faux = f;		
+		System.out.println(">>AnalizadorLexico.java/otroCaracter()->c[1]="+c[0]);			
+		switch (e.getEstado()) {
+		case 9:/**cadena, apertura de comillas*/
+			
+			break;//case 9
+		case 21:/**suma o asignación con suma*/
+		//	aqui podemos ver si es un =
+			caracteresRestantes = faux.read(c);		
+			if (caracteresRestantes != -1) {
+				genError(401);
+			}
+			else{
 				if(c[0] !='=') {
 					esOtroCaracter = true;
 					if(c[0]=='+') {
+						esOtroCaracter = false;
 						genError(400);//operador ++ no soportado
 					}
 				}
-				break;//case 21
-			case 22:/**asignación o operador relacional igual*/
+			}
+			break;//case 21
+		case 22:/**asignación o operador relacional igual*/
+			caracteresRestantes = faux.read(c);		
+			if (caracteresRestantes != -1) {
+				genError(401);
+			}
+			else {
 				if(c[0] !='=') {
 					esOtroCaracter = true;
 				}
-				break;//case 22
-			case 23:/** */
-				
-				if (ultimoCaracterLeido == ' ' || c[0] == '=' || c[0] == '+' || c[0] == '&' || c[0] == '(' || c[0] == ')' || c[0] == '{' ||c[0] == '}'|| c[0] == '\n' || c[0] == '\r') {
-					esOtroCaracter = true;
-				}
-				break;//case 23
-			case 24:/** */
+			}
+			break;//case 22
+		case 23:/**caso letra pero sin comillas, ID o PR. aqui no se lee, se viene leido */						
+			if (ultimoCaracterLeido == ' ' || c[0] == '=' || c[0] == '+' || c[0] == '&' || c[0] == '(' || c[0] == ')' || c[0] == '{' ||c[0] == '}'|| c[0] == '\n' || c[0] == '\r') {
+				esOtroCaracter = true;
+			}
+			break;//case 23
+		case 24:/**caso es digito */
+			if (ultimoCaracterLeido == ' ' || c[0] == '=' || c[0] == '+' || c[0] == '&' || c[0] == '(' || c[0] == ')' || c[0] == '{' ||c[0] == '}'|| c[0] == '\n' || c[0] == '\r') {
+				esOtroCaracter = true;
+			}
+			break;//case 24
+		case 25:/** */
+		
+			break;//case 25
+		case 70:/**cadena, recibe caracter*/
 			
-				break;//case 24
-			case 25:/** */
-			
-				break;//case 25
-			case 70:/**cadena, recibe caracter*/
-				
-				break;//case 70
-			default:			
-			}//switch
-		}//if
+			break;//case 70
+		default:			
+		}//switch
+		
 			return esOtroCaracter;
 	}
 	
@@ -369,9 +417,11 @@ public class AnalizadorLexico {
 	private void genError(int i) {
 		String lineaEntrada = "linea por determinar";
 		switch(i) {
-		case 400: System.out.println("STOP=> ERROR ANALISIS LEXICO: SIMBOLO NO SOPORTADO "+lineaEntrada);
-		case 401: System.out.println("STOP=> ERROR ANALISIS LEXICO: SIMBOLO NO ESPERADO TRAS ABRIR COMILLAS. CADENA VACIA");
-		case 402: System.out.println("STOP=> ERROR ANALISIS LEXICO:");
+		case 400: System.out.println("STOP=> ERROR ANALISIS LEXICO: SIMBOLO NO SOPORTADO "+lineaEntrada);break;
+		case 401: System.out.println("STOP=> ERROR ANALISIS LEXICO: SIMBOLO NO ESPERADO TRAS ABRIR COMILLAS. CADENA VACIA");break;
+		case 402: System.out.println("STOP=> ERROR ANALISIS LEXICO:");break;
+		case 403: System.out.println("STOP=> ERROR ANALISIS LEXICO: se esperaba un digito");break;
+		case 406: System.out.println("STOP=> ERROR ANALISIS LEXICO: se esperaba un digito diferente a cero");break;
 		}
 		
 	}

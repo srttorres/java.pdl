@@ -13,7 +13,7 @@ public class App {
 	   String ficheroEntrada = "codigo_";
 	   String rutaCarpetaSalida = "src/es/upm/fi/pdl/salida/";
 	   Integer num;
-	   for (num = 1;num<=14;num++) {		   		   
+	   for (num = 1;num<=17;num++) {		   		   
 		   String numero = num.toString();
 		   if (num<10) {
 			   numero = "0"+numero;
