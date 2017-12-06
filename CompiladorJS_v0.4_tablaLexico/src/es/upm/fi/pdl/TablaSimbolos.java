@@ -10,7 +10,7 @@ public class TablaSimbolos {
 	
 	public TablaSimbolos() {
 		mapa = new HashMap<String,Integer>();
-		posicion = 1;
+		posicion = 101;
 	}
 	public int añadirEntrada (String s) {
 		mapa.put(s, posicion);
