@@ -73,13 +73,14 @@ public class AnalizadorLexico {
 		}
 		while((caracteresRestantes != -1) && !tokenEncontrado );
 		if(tokenEncontrado) {
-			t = getTokenGen(estadoActual);
+			t = getTokenGen();
 		}
 		else if(caracteresRestantes==-1){
 			genToken(EOF,null);
+			t = getTokenGen();
 		}		
         if (fr != null) {ManejadorFicheros.cerrarDescriptorEntrada(fr);}//si no hay ningún token generado, no se abre el descriptor de Salida
-        
+        //System.out.println("Token de ejecutar: "+t.toString());
         return t;
 	}
 
@@ -132,10 +133,14 @@ public class AnalizadorLexico {
 			case '&':
 				estadoSiguiente.setEstado(25);
 				break;
+			case '\\':
+				genError(400);break;//simbolo no soportado
+			case '\'':
+				genError(400);break;//simbolo no soportado	
 			case '-':
 				genError(400);break;//simbolo no soportado				
 			case '*':
-				genError(400);break;//simbolo no soportadogenError(400);//simbolo no soportado				
+				genError(400);break;//simbolo no soportado				
 			case '|':
 				genError(400);break;//simbolo no encontrado				
 			case '/':
@@ -192,8 +197,10 @@ public class AnalizadorLexico {
 				genToken(OP_ARIT_SUMA,null);
 			}
 			else if (c == '='){
+				System.out.println("TOKENGENERADO");
 				estadoSiguiente.setEstado(62);
 				genToken(ASIG_SUMA,null);
+				System.out.println("TOKENGENERADO");
 			}
 			break;//case 21
 			
@@ -348,7 +355,7 @@ public class AnalizadorLexico {
 			return esOtroCaracter;
 	}
 	
-	private Token getTokenGen(Estado estadoActual) {
+	private Token getTokenGen() {
 		Token t = tokenGenerado;
 		
 		return t;
@@ -434,6 +441,7 @@ public class AnalizadorLexico {
 			fw.write(t);
 			break;
 		case ASIG_SUMA:
+			System.out.println("si entra aqui, no entiendo nada");
 			tokenGenerado = new Token(ASIG_SUMA,null);
 			t = tokenGenerado.toString();
 			System.out.println(t);
@@ -455,13 +463,13 @@ public class AnalizadorLexico {
 		case IDENTIFICADOR:
 			tokenGenerado = new Token(IDENTIFICADOR,lexema);
 			t = tokenGenerado.toString();
-			System.out.println(t);
+			ManejadorFicheros.log(t);
 			fw.write(t);
 			break;
 		case ENTERO:
 			tokenGenerado = new Token(ENTERO,lexema);
 			t = tokenGenerado.toString();
-			System.out.println(t);
+			ManejadorFicheros.log(t);
 			fw.write(t);
 			break;
 		}

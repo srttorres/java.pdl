@@ -69,7 +69,7 @@ public String toString() {
 		s = "<ASIG_SIMPLE,>";
 		break;
 	case ASIG_SUMA:
-		s = "<ASIG_SIMPLE,>";
+		s = "<ASIG_SUMA,>";
 		break;
 	case CADENA:
 		s = "<CADENA,"+this.valor+">";

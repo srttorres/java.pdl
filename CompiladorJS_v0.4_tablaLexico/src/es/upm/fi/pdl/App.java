@@ -19,7 +19,7 @@ public class App {
 			   numero = "0"+numero;
 		   }
 		   System.out.println("=========AL[Prueba "+numero+"]======");
-		   AL.setSalidaTokens(ManejadorFicheros.getDescriptorSalida(rutaCarpetaSalida+ficheroEntrada+numero+".txt"));
+		   AL.setSalidaTokens(ManejadorFicheros.getDescriptorSalida(rutaCarpetaSalida+"tokens_"+numero+".txt"));
 		   AL.ejecutar(ManejadorFicheros.getDescriptorEntrada(rutaCarpetaEntrada+ficheroEntrada+numero+".js"));
 	   
 	   }
