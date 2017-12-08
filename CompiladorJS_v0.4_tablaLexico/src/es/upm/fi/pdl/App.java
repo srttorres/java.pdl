@@ -12,16 +12,15 @@ public class App {
 	   String rutaCarpetaEntrada = "src/es/upm/fi/pdl/entrada/";
 	   String ficheroEntrada = "codigo_";
 	   String rutaCarpetaSalida = "src/es/upm/fi/pdl/salida/";
-	   Integer num;
-	   for (num = 1;num<=17;num++) {		   		   
-		   String numero = num.toString();
-		   if (num<10) {
-			   numero = "0"+numero;
-		   }
-		   System.out.println("=========AL[Prueba "+numero+"]======");
-		   AL.setSalidaTokens(ManejadorFicheros.getDescriptorSalida(rutaCarpetaSalida+"tokens_"+numero+".txt"));
-		   AL.ejecutar(ManejadorFicheros.getDescriptorEntrada(rutaCarpetaEntrada+ficheroEntrada+numero+".js"));
-	   
+	   String numero = "18";
+	   Token token; 
+	   System.out.println("=========AL[Prueba "+numero+"]======");
+	   AL.setSalidaTokens(ManejadorFicheros.getDescriptorSalida(rutaCarpetaSalida+"tokens_"+numero+".txt"));
+	   do {
+	   token = AL.ejecutar(ManejadorFicheros.getDescriptorEntrada(rutaCarpetaEntrada+ficheroEntrada+numero+".js"));
 	   }
+	   while (token.toString()!="<EOF,>");
+	   
+	   
 }//main
 }//App

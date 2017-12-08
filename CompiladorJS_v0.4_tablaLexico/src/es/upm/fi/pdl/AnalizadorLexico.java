@@ -29,7 +29,9 @@ public class AnalizadorLexico {
 	static final int  PALABRA_RESERVADA	= 81;
 	static final int  IDENTIFICADOR		= 82;	
 	static final int  ENTERO			= 91;
-		
+		/**
+		 * CONSTRUCTOR
+		 */
 	public AnalizadorLexico() {
 		caracteresRestantes = 0;
 		tokenEncontrado = false;		
@@ -59,6 +61,7 @@ public class AnalizadorLexico {
 	 * @throws IOException
 	 */
 	public Token ejecutar(FileReader fr) throws IOException {
+		ManejadorFicheros.log("+EJECUTAR()");
 		tokenEncontrado = false; 
 		Token t = null;
 		Estado estadoActual = new Estado();//empezamos en el estado 0
@@ -66,8 +69,7 @@ public class AnalizadorLexico {
 		String lexema = null;
 		do {			
 			caracteresRestantes = fr.read(siguienteCaracter);
-			lexema = lexema+Character.toString(siguienteCaracter[0]);			
-			//System.out.println(">>lexema:"+lexema);		
+			lexema = lexema+Character.toString(siguienteCaracter[0]);							
 			estadoActual = aplicarMatrizTransicion(siguienteCaracter[0], estadoActual, fr);
 			lexema = estadoActual.getLexema();			
 		}
@@ -80,7 +82,7 @@ public class AnalizadorLexico {
 			t = getTokenGen();
 		}		
         if (fr != null) {ManejadorFicheros.cerrarDescriptorEntrada(fr);}//si no hay ningún token generado, no se abre el descriptor de Salida
-        //System.out.println("Token de ejecutar: "+t.toString());
+        ManejadorFicheros.log("Token preparado x AL.ejecutar(): "+t.toString());
         return t;
 	}
 
@@ -95,12 +97,11 @@ public class AnalizadorLexico {
 	private Estado aplicarMatrizTransicion(char c, Estado estadoActual, FileReader fr) throws IOException {
 		Estado estadoSiguiente = new Estado();
 		String lexema = null;
-		switch (estadoActual.getEstado()) {
-		
+		switch (estadoActual.getEstado()) {		
 		
 		case 0:/**ESTADO 0: inicio*/ 			
 			switch (c) {
-			//caso de EOF tratado en la condición de llamada a la función aplicarMatrizTransicion()
+			//caso de EOF tratado antes de llamar a esta función
 			case ' ':break;//espacio, no genera token
 				
 			case ','://genera token COMA
@@ -161,7 +162,7 @@ public class AnalizadorLexico {
 					estadoSiguiente.setEstado(23);
 					lexema = Character.toString(c);					
 					estadoSiguiente.setLexema(lexema);
-					//System.out.printf(">>>>LEXEMA: %s\n",estadoSiguiente.getLexema());
+					ManejadorFicheros.log(">>LEXEMA: "+estadoSiguiente.getLexema());
 				}
 				if(Character.isDigit(c)) {
 					if(c=='0') {
@@ -186,7 +187,7 @@ public class AnalizadorLexico {
 				estadoActual.setLexema("");
 				estadoSiguiente.setEstado(70);				
 				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
-				//System.out.println(">>>>LEXEMA:"+estadoSiguiente.getLexema());
+				ManejadorFicheros.log(">>LEXEMA:"+estadoSiguiente.getLexema());
 			}
 			break;//case 9
 		
@@ -196,11 +197,9 @@ public class AnalizadorLexico {
 				estadoSiguiente.setEstado(51);
 				genToken(OP_ARIT_SUMA,null);
 			}
-			else if (c == '='){
-				System.out.println("TOKENGENERADO");
+			else if (c == '='){				
 				estadoSiguiente.setEstado(62);
-				genToken(ASIG_SUMA,null);
-				System.out.println("TOKENGENERADO");
+				genToken(ASIG_SUMA,null);				
 			}
 			break;//case 21
 			
@@ -223,7 +222,7 @@ public class AnalizadorLexico {
 				estadoSiguiente.setEstado(23);
 				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
 				estadoSiguiente.setLexema(estadoSiguiente.getLexema());
-				//System.out.printf(">>>>LEXEMA: %s\n",estadoSiguiente.getLexema());
+				ManejadorFicheros.log(">>LEXEMA: "+estadoSiguiente.getLexema());
 			}
 			else {
 				//si es otro caracter, es decir, espacio, operador o otra cosa, se genera el token				
@@ -260,7 +259,7 @@ public class AnalizadorLexico {
 				estadoSiguiente.setEstado(24);
 				int valor = estadoActual.getValor()*10 + Integer.parseInt(Character.toString(c));
 				estadoSiguiente.setValor(valor);
-				//System.out.printf(">>>>VALOR: %s\n",estadoSiguiente.getValor());
+				ManejadorFicheros.log(">>VALOR:"+estadoSiguiente.getValor());
 			}
 			break;//case 24
 			
@@ -282,7 +281,7 @@ public class AnalizadorLexico {
 			else {				
 				estadoSiguiente.setEstado(70);				
 				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
-				//System.out.println(">>>>LEXEMA:"+estadoSiguiente.getLexema());
+				ManejadorFicheros.log(">>LEXEMA:"+estadoSiguiente.getLexema());
 			}
 			
 			break;//case 70
@@ -308,11 +307,10 @@ public class AnalizadorLexico {
 	private boolean otroCaracter(Estado e,char ultimoCaracterLeido) throws IOException {
 		//FALTA POR IMPLEMENTAR LA VERSION PROYECTADA
 		boolean esOtroCaracter = false;								
-		//System.out.println(">>AnalizadorLexico.java/otroCaracter()->c[1]="+ultimoCaracterLeido);			
+		ManejadorFicheros.log(">>otroCaracter(): "+ultimoCaracterLeido);			
 		switch (e.getEstado()) {
-		case 9:/**cadena, apertura de comillas*/
-			
-			break;//case 9
+		case 9:/**cadena, apertura de comillas*/			
+			break;//case 9 VACIO
 		case 21:/**suma o asignación con suma*/
 			//HABRIA QUE REVISAR QUE PASARIA si el caracter fuera = Y SI SE ESE CASO SE TRATA EN OTRO LADO
 			if(ultimoCaracterLeido == '+') {
@@ -324,9 +322,7 @@ public class AnalizadorLexico {
 			}
 			else {
 				esOtroCaracter = true;
-			}
-			
-			
+			}						
 			break;//case 21
 		case 22:/**asignación o operador relacional igual*/								
 			if(ultimoCaracterLeido !='=') {
@@ -368,113 +364,84 @@ public class AnalizadorLexico {
 	 * @param tokenID
 	 * @param lexem
 	 * @throws IOException
-	 * @comment Llamada a Token(int id, String name, String value)
+	 * @comment Llamada a Token(int id, String name, String value) y grabación de datos en log y en fichero Tokens
 	 */
 	private void genToken(int tokenID, String lexema) throws IOException {
-		String t =""; 
 		tokenEncontrado = true;		
 		switch (tokenID) {
 		case EOF: /*escribir token en tokenGenerado y en fichero salida*/;
 			tokenGenerado = new Token(EOF,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case COMA:
 			tokenGenerado = new Token(COMA,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case PYCOMA:
 			tokenGenerado = new Token(PYCOMA,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case PARENTESIS_A :
 			tokenGenerado = new Token(PARENTESIS_A,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case PARENTESIS_C :
 			tokenGenerado = new Token(PARENTESIS_C,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case LLAVE_A:
 			tokenGenerado = new Token(LLAVE_A,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case LLAVE_C:
 			tokenGenerado = new Token(LLAVE_C,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case OP_ARIT_SUMA:
 			tokenGenerado = new Token(OP_ARIT_SUMA,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case OP_REL_IGUAL:
 			tokenGenerado = new Token(OP_REL_IGUAL,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case OP_LOG_AND:
 			tokenGenerado = new Token(OP_LOG_AND,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case ASIG_SIMPLE:
 			tokenGenerado = new Token(ASIG_SIMPLE,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
-		case ASIG_SUMA:
-			System.out.println("si entra aqui, no entiendo nada");
+		case ASIG_SUMA:			
 			tokenGenerado = new Token(ASIG_SUMA,null);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();;
 			break;
 		case CADENA:			
 			tokenGenerado = new Token(CADENA,lexema);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);			
+			grabarToken();			
 			break;
 		case PALABRA_RESERVADA:
 			
 			tokenGenerado = new Token(PALABRA_RESERVADA,lexema);
-			t = tokenGenerado.toString();
-			System.out.println(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case IDENTIFICADOR:
 			tokenGenerado = new Token(IDENTIFICADOR,lexema);
-			t = tokenGenerado.toString();
-			ManejadorFicheros.log(t);
-			fw.write(t);
+			grabarToken();
 			break;
 		case ENTERO:
 			tokenGenerado = new Token(ENTERO,lexema);
-			t = tokenGenerado.toString();
-			ManejadorFicheros.log(t);
-			fw.write(t);
+			grabarToken();
 			break;
-		}
-		
+		}		
 		if (fw != null) {ManejadorFicheros.cerrarDescriptorSalida(fw);}		
+		
+	}
+	private void grabarToken() throws IOException {
+		String t = tokenGenerado.toString();
+		ManejadorFicheros.log(t);
+		fw.write(t);
 		
 	}
 	private void genError(int i) {
