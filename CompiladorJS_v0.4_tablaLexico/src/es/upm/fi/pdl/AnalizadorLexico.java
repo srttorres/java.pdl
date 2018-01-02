@@ -81,8 +81,7 @@ public class AnalizadorLexico {
 			genToken(EOF,null);
 			t = getTokenGen();
 		}		
-        if (fr != null) {ManejadorFicheros.cerrarDescriptorEntrada(fr);}//si no hay ningún token generado, no se abre el descriptor de Salida
-        ManejadorFicheros.log("Token preparado x AL.ejecutar(): "+t.toString());
+        if (fr != null) {ManejadorFicheros.cerrarDescriptorEntrada(fr);}//si no hay ningún token generado, no se abre el descriptor de Salida        
         return t;
 	}
 
