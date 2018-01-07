@@ -11,7 +11,7 @@ public class AnalizadorLexico {
 	static boolean tokenEncontrado;//se inicializará a falso
 	static Token tokenGenerado;
 	static FileWriter fw;
-	static Map<String, Integer> diccionarioPR;
+	static Map<String, Integer> diccionarioPR;	
 	static TablaSimbolos tablaSimbolos = new TablaSimbolos();
 	static final int  EOF 				= 1;
 	static final int  COMA 				= 3;
@@ -35,24 +35,20 @@ public class AnalizadorLexico {
 	public AnalizadorLexico() {
 		caracteresRestantes = 0;
 		tokenEncontrado = false;		
-		diccionarioPR = new HashMap<String, Integer>();		
-		diccionarioPR.put("true",1);
-		diccionarioPR.put("false",2);
-		diccionarioPR.put("if",	3);
-		diccionarioPR.put("while",4);
-		diccionarioPR.put("do",5);
-		diccionarioPR.put("var",6);
-		diccionarioPR.put("bool",7);
-		diccionarioPR.put("chars",8);
-		diccionarioPR.put("int",9);
-		diccionarioPR.put("function",10);
-		diccionarioPR.put("prompt",11);
-		diccionarioPR.put("write",12);
-		diccionarioPR.put("return",13);
-		diccionarioPR.put("numero",14);
-		diccionarioPR.put("cadena",15);
-		diccionarioPR.put("booleano",16);
-		diccionarioPR.put("id",17);
+		diccionarioPR = new HashMap<String, Integer>();	//luego se recupera con get en el caso 23 de aplicarMatrizTransicion
+		diccionarioPR.put("true",0);
+		diccionarioPR.put("false",1);
+		diccionarioPR.put("if",	2);
+		diccionarioPR.put("while",3);
+		diccionarioPR.put("do",4);
+		diccionarioPR.put("var",5);
+		diccionarioPR.put("bool",6);
+		diccionarioPR.put("chars",7);
+		diccionarioPR.put("int",8);
+		diccionarioPR.put("function",9);
+		diccionarioPR.put("prompt",10);
+		diccionarioPR.put("write",11);
+		diccionarioPR.put("return",13);		
 	}
 	/**
 	 * Llamada desde el Analizador Sintáctico en busca de un token (en la version 0.4 se llama desde el Programa principal App)
@@ -61,7 +57,7 @@ public class AnalizadorLexico {
 	 * @throws IOException
 	 */
 	public Token ejecutar(FileReader fr) throws IOException {
-		ManejadorFicheros.log("+EJECUTAR()");
+		ManejadorFicheros.log("+AL.EJECUTAR()");
 		tokenEncontrado = false; 
 		Token t = null;
 		Estado estadoActual = new Estado();//empezamos en el estado 0
@@ -161,7 +157,7 @@ public class AnalizadorLexico {
 					estadoSiguiente.setEstado(23);
 					lexema = Character.toString(c);					
 					estadoSiguiente.setLexema(lexema);
-					ManejadorFicheros.log(">>LEXEMA: "+estadoSiguiente.getLexema());
+					ManejadorFicheros.log("AL>>LEXEMA: "+estadoSiguiente.getLexema());
 				}
 				if(Character.isDigit(c)) {
 					if(c=='0') {
@@ -186,7 +182,7 @@ public class AnalizadorLexico {
 				estadoActual.setLexema("");
 				estadoSiguiente.setEstado(70);				
 				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
-				ManejadorFicheros.log(">>LEXEMA:"+estadoSiguiente.getLexema());
+				ManejadorFicheros.log("AL>>LEXEMA:"+estadoSiguiente.getLexema());
 			}
 			break;//case 9
 		
@@ -221,7 +217,7 @@ public class AnalizadorLexico {
 				estadoSiguiente.setEstado(23);
 				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
 				estadoSiguiente.setLexema(estadoSiguiente.getLexema());
-				ManejadorFicheros.log(">>LEXEMA: "+estadoSiguiente.getLexema());
+				ManejadorFicheros.log("AL>>LEXEMA: "+estadoSiguiente.getLexema());
 			}
 			else {
 				//si es otro caracter, es decir, espacio, operador o otra cosa, se genera el token				
@@ -258,7 +254,7 @@ public class AnalizadorLexico {
 				estadoSiguiente.setEstado(24);
 				int valor = estadoActual.getValor()*10 + Integer.parseInt(Character.toString(c));
 				estadoSiguiente.setValor(valor);
-				ManejadorFicheros.log(">>VALOR:"+estadoSiguiente.getValor());
+				ManejadorFicheros.log("AL>>VALOR:"+estadoSiguiente.getValor());
 			}
 			break;//case 24
 			
@@ -280,7 +276,7 @@ public class AnalizadorLexico {
 			else {				
 				estadoSiguiente.setEstado(70);				
 				estadoSiguiente.setLexema(estadoActual.getLexema()+c);
-				ManejadorFicheros.log(">>LEXEMA:"+estadoSiguiente.getLexema());
+				ManejadorFicheros.log("AL>>LEXEMA:"+estadoSiguiente.getLexema());
 			}
 			
 			break;//case 70
@@ -306,7 +302,7 @@ public class AnalizadorLexico {
 	private boolean otroCaracter(Estado e,char ultimoCaracterLeido) throws IOException {
 		//FALTA POR IMPLEMENTAR LA VERSION PROYECTADA
 		boolean esOtroCaracter = false;								
-		ManejadorFicheros.log(">>otroCaracter(): "+ultimoCaracterLeido);			
+		ManejadorFicheros.log("AL>>otroCaracter(): "+ultimoCaracterLeido);			
 		switch (e.getEstado()) {
 		case 9:/**cadena, apertura de comillas*/			
 			break;//case 9 VACIO
@@ -439,7 +435,7 @@ public class AnalizadorLexico {
 	}
 	private void grabarToken() throws IOException {
 		String t = tokenGenerado.toString();
-		ManejadorFicheros.log(t);
+		ManejadorFicheros.log("AL>>----------"+t+"--------");
 		fw.write(t);
 		
 	}

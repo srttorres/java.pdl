@@ -1,35 +1,34 @@
 package es.upm.fi.pdl;
 
-public class Token {
+import java.util.HashMap;
+
+public class Token {//(identificador, valor)
 	
 private static int identificador;
-
+private static String valor;//Puede ser un lexema
+//o un puntero a TS
+//o un entero. 
+//En cada caso habrá que hacer una conversión de tipo
 public static int getIdentificador() {
 	return identificador;
 }
-
 public static void setIdentificador(int identificador) {
 	Token.identificador = identificador;
 }
-
 public static String getValor() {
 	return valor;
 }
-
 public static void setValor(String valor) {
 	Token.valor = valor;
 }
-
-private static String valor;//Puede ser un lexema
-							//o un puntero a TS
-							//o un entero. 
-							//En cada caso habrá que hacer una conversión de tipo
 public Token(int id, String value) {
 	this.identificador = id;
 
 	if (value!=null)
 		this.valor = value;
 	}
+
+
 
 static final int  EOF 				= 1;
 static final int  COMA 				= 3;

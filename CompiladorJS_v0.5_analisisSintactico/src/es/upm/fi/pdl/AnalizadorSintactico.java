@@ -1,22 +1,56 @@
 package es.upm.fi.pdl;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Stack;
 
 public class AnalizadorSintactico {
+	final static int ERROR = 0;
 	final static int DESPLAZAR = 1;
 	final static int REDUCIR = 2;
 	final static int ACEPTAR = 3;
+	
+	final static int PALABRA_RESERVADA = 81;//esto aquí porque en token se cargan todos los tokens con los valores anteriores y se necesita para toSimboloEntrada
+	final static int DOLLAR = 4217;
+	ArrayList<Integer> reglasParse = new ArrayList<Integer>();
+	static HashMap<Integer,Integer> diccionarioST;
 	static Casilla [][] tablaSLR;//[Estado][simbolo]
-
+	Stack<Integer> pila = new Stack<Integer>();
+	int estadoActual;
+	/**
+	 * Constructor:
+	 * Cargar TablaSLR
+	 */
 	public AnalizadorSintactico() {
+		diccionarioST = new HashMap<Integer, Integer>();	//luego se recupera con get en el metodo tokenToSimboloEntrada
+		diccionarioST.put(1,13);
+		diccionarioST.put(3,14);
+		diccionarioST.put(4,15);
+		diccionarioST.put(5,16);
+		diccionarioST.put(6,17);
+		diccionarioST.put(7,18);
+		diccionarioST.put(8,19);
+		diccionarioST.put(51,20);
+		diccionarioST.put(52,21);
+		diccionarioST.put(53,22);
+		diccionarioST.put(61,23);
+		diccionarioST.put(62,24);
+		diccionarioST.put(71,25);
+		diccionarioST.put(81,26);
+		diccionarioST.put(82,27);
+		diccionarioST.put(91,28);
+		diccionarioST.put(0, 99);
+		pila.push(0);//se inicializa con el ítem_0. Y el simbolo dollar no lo meto de momento		
 		tablaSLR = new Casilla[78][46];
 		int i = 0, j=0;
-		for(i=0;i<78;i++) {
-			for(j=0;j<46;j++) {
-				System.out.println("Casilla"+"["+i+","+j+"]----------------------");
+		for(i=0;i<78;i++) {//inicializando tabla
+			for(j=0;j<46;j++) {				
 				tablaSLR[i][j] = new Casilla();								
 			}//for
-		}//for
+		}//for		
 		/**
 		 * valores de la tablaSLR agrupados por filas. de momento no hay accion semantica.
 		 */
@@ -97,9 +131,9 @@ public class AnalizadorSintactico {
 		
 		tablaSLR[10][Simbolo.PARENTESIS_A.id] 	= new Casilla(DESPLAZAR,29,0);
 		
-		tablaSLR[11][Simbolo.PARENTESIS_A.id] 	= new Casilla(DESPLAZAR,32,0);
-		tablaSLR[11][Simbolo.PARENTESIS_A.id] 	= new Casilla(DESPLAZAR,33,0);
-		tablaSLR[11][Simbolo.PARENTESIS_A.id] 	= new Casilla(DESPLAZAR,34,0);
+		tablaSLR[11][Simbolo.pr7.id] 	= new Casilla(DESPLAZAR,32,0);
+		tablaSLR[11][Simbolo.pr8.id] 	= new Casilla(DESPLAZAR,33,0);
+		tablaSLR[11][Simbolo.pr9.id] 	= new Casilla(DESPLAZAR,34,0);
 		tablaSLR[11][Simbolo.IDENTIFICADOR.id] 	= new Casilla(REDUCIR,31,0);
 		tablaSLR[11][Goto.T.id] 				= new Casilla(REDUCIR,31,0);
 		tablaSLR[11][Goto.RF.id] 				= new Casilla(REDUCIR,30,0);
@@ -477,4 +511,174 @@ public class AnalizadorSintactico {
 		tablaSLR[77][Simbolo.LLAVE_C.id] 		= new Casilla(REDUCIR,38,0);
 		
 	}//constructor
+
+	public ArrayList<Integer> ejecutar (FileReader fr, FileWriter fw) throws IOException {
+		ManejadorFicheros.log("+AS.EJECUTAR()");
+		boolean aceptar = false,error =false;
+		AnalizadorLexico AL = new AnalizadorLexico();
+		AL.setSalidaTokens(fw);
+		Token token = AL.ejecutar(fr);//primera llamada. (así funciona)		
+		Integer simboloEntrada = tokenToSimboloEntrada(token);
+		
+		ManejadorFicheros.log("AS>>tablaSLR["+0+"]"+"["+simboloEntrada+"]");
+		Casilla c = this.tablaSLR[0][simboloEntrada];//siempre se empieza por el estado 0
+		ManejadorFicheros.log("AS>>>>(c.op="+c.op+") (c.num="+c.num+") (c.accion="+c.accion+")");
+		
+		do {
+			estadoActual = pila.pop();pila.push(estadoActual);//en el algoritmo no pone que lo saque. asi que lo consulto y lo meto
+			switch (c.op) {
+			case 0://ERROR SINTACTICO
+				error = true;
+			case 1://DESPLAZAR
+				ManejadorFicheros.log("AS>>DESPLAZAR-"+c.num);
+				//1)meter a en la pila
+				pila.push (simboloEntrada);ManejadorFicheros.log("AS>>push simboloEntrada:"+simboloEntrada);
+				//2)meter estadoFuturo en la pila
+				pila.push(c.num);
+				ManejadorFicheros.log("AS>>push c.num:"+c.num);
+				//3)se pide el siguiente token al AL
+				token = AL.ejecutar(fr);
+				simboloEntrada = tokenToSimboloEntrada(token);
+				
+				ManejadorFicheros.log("AS>>>>tablaSLR["+c.num+"]"+"["+simboloEntrada+"]");
+				c = tablaSLR[c.num][simboloEntrada];
+				ManejadorFicheros.log("AS>>>>(c.op="+c.op+") (c.num="+c.num+") (c.accion="+c.accion+")");
+				break;
+			case 2://REDUCIR
+				ManejadorFicheros.log("AS>>REDUCIR-"+c.num);
+				int B=0;
+				//1) sacar d*B simbolos de la pila
+				for(B=nSimbolos(c.num)*2;B>0;B--) {
+					int s = pila.pop();
+					ManejadorFicheros.log("AS>>pop"+B +":"+s);
+				}//for
+				//2) sea estadoCima el estado que está ahora en la cima de la pila
+				int estadoCima = pila.pop();pila.push(estadoCima);//en el algoritmo no pone que lo saque. asi que lo consulto y lo meto
+				//3)meter A en la pila
+				pila.push(c.num);				
+				//4)obtener el GOTO y meterlo en la pila
+				int simboloTerminal = nReglaToSimboloterminal(c.num);
+				ManejadorFicheros.log("AS>>>>GOTO["+estadoCima+"]"+"["+simboloTerminal+"]");				
+				Casilla g=tablaSLR[estadoCima][simboloTerminal];
+				pila.push(g.num);
+				ManejadorFicheros.log("AS>>push c.num:"+c.num);
+				ManejadorFicheros.log("AS>>>>(g.op="+g.op+") (g.num="+g.num+") (g.accion="+g.accion+")");												
+				//5)se genera el parse correspondiente a esta regla (antes de que cambie)
+				reglasParse.add(c.num);
+				ManejadorFicheros.log("AS>>>>Regla Parse: "+c.num);
+
+				break;
+			case 3://ACEPTAR
+				aceptar=true;
+				ManejadorFicheros.log("AS>>ACEPTAR");
+				break;
+			}								
+		}
+		while(!aceptar||!error);
+		
+		return reglasParse;
+	}
+	private int nReglaToSimboloterminal(int num) {
+		int ST = 0;
+		switch(num) {
+			case 1: ST = 99;break;//AX NO FORMA PARTE DE LA TABLA
+			case 2: ST = 30;break;
+			case 3: ST = 30;break;
+			case 4: ST = 30;break;
+			case 5: ST = 31;break;
+			case 6: ST = 31;break;
+			case 7: ST = 31;break;
+			case 8: ST = 31;break;
+			case 9: ST = 31;break;
+			case 10: ST = 31;break;
+			case 11: ST = 31;break;
+			case 12: ST = 32;break;
+			case 13: ST = 32;break;
+			case 14: ST = 32;break;
+			case 15: ST = 33;break;
+			case 16: ST = 34;break;
+			case 17: ST = 34;break;
+			case 18: ST = 35;break;
+			case 19: ST = 35;break;
+			case 20: ST = 36;break;
+			case 21: ST = 36;break;
+			case 22: ST = 37;break;
+			case 23: ST = 37;break;
+			case 24: ST = 37;break;
+			case 25: ST = 37;break;
+			case 26: ST = 38;break;
+			case 27: ST = 39;break;
+			case 28: ST = 39;break;
+			case 29: ST = 40;break;
+			case 30: ST = 40;break;
+			case 31: ST = 41;break;
+			case 32: ST = 41;break;
+			case 33: ST = 42;break;
+			case 34: ST = 42;break;
+			case 35: ST = 43;break;
+			case 36: ST = 43;break;
+			case 37: ST = 44;break;
+			case 38: ST = 44;break;
+			case 39: ST = 45;break;
+			case 40: ST = 45;break;
+		}
+		return ST;
+	}
+
+	public int tokenToSimboloEntrada(Token t) {
+		Integer simbolo = 0;
+		if(t.getIdentificador() == PALABRA_RESERVADA) {
+			simbolo = Integer.parseInt(t.getValor());
+		}
+		else {
+			simbolo = (Integer) diccionarioST.get(t.getIdentificador());
+		}
+		return simbolo;	
+	}
+	private int nSimbolos(int numeroRegla) {
+		int B = 0;
+		switch(numeroRegla) {
+			case 1: B = 1;break;
+			case 2: B = 2;break;
+			case 3: B = 2;break;
+			case 4: B = 1;break;
+			case 5: B = 5;break;
+			case 6: B = 2;break;
+			case 7: B = 4;break;
+			case 8: B = 3;break;
+			case 9: B = 3;break;
+			case 10: B = 3;break;
+			case 11: B = 5;break;
+			case 12: B = 1;break;
+			case 13: B = 1;break;
+			case 14: B = 1;break;
+			case 15: B = 3;break;
+			case 16: B = 3;break;
+			case 17: B = 1;break;
+			case 18: B = 3;break;
+			case 19: B = 1;break;
+			case 20: B = 3;break;
+			case 21: B = 1;break;
+			case 22: B = 1;break;
+			case 23: B = 1;break;
+			case 24: B = 2;break;
+			case 25: B = 1;break;
+			case 26: B = 9;break;
+			case 27: B = 0;break;
+			case 28: B = 3;break;
+			case 29: B = 3;break;
+			case 30: B = 2;break;
+			case 31: B = 0;break;
+			case 32: B = 1;break;
+			case 33: B = 0;break;
+			case 34: B = 3;break;
+			case 35: B = 0;break;
+			case 36: B = 4;break;
+			case 37: B = 0;break;
+			case 38: B = 2;break;
+			case 39: B = 1;break;
+			case 40: B = 0;break;
+		}
+		return B;
+	}
 }//AS

@@ -89,8 +89,13 @@ public class ManejadorFicheros {
         return lexema;
         
 	}
+	public static void vaciarLog() {
+	    File fichero = new File("src/es/upm/fi/pdl/salida/log.txt");
+	    if (fichero.delete()) {}	        
+	    else {System.out.println("El fichero no pudó ser borrado");}		
+	}
 
 
 
 
-}
+}//class
