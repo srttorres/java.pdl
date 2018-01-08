@@ -92,7 +92,7 @@ public class AnalizadorSintactico {
 		
 		tablaSLR[4][Simbolo.DOLLAR.id] 			= new Casilla(REDUCIR,4,0);
 		
-		tablaSLR[5][Simbolo.IDENTIFICADOR.id]	= new Casilla(REDUCIR,13,0);
+		tablaSLR[5][Simbolo.IDENTIFICADOR.id]	= new Casilla(DESPLAZAR,13,0);
 		
 		tablaSLR[6][Simbolo.pr3.id]		= new Casilla(REDUCIR,27,0);
 		tablaSLR[6][Simbolo.pr6.id]		= new Casilla(REDUCIR,27,0);
@@ -521,59 +521,60 @@ public class AnalizadorSintactico {
 		Integer simboloEntrada = tokenToSimboloEntrada(token);
 		//0)sea estadoCima el estado de la cima de la pila
 		pila.push(0); //la pila la inicializo con el estado 0.
-		ManejadorFicheros.log("AS>>>>         push:"+0);
+		ManejadorFicheros.log("  AS>>>>         push:"+0);
 		while(!aceptar&&!error) {
 			estadoCima = pila.pop();
-			ManejadorFicheros.log("AS>>>>         pop bucle:"+estadoCima);
-			ManejadorFicheros.log("AS>>>>         tablaSLR["+estadoCima+"]"+"["+simboloEntrada+"]");
+			ManejadorFicheros.log("  AS>>>>         pop bucle:"+estadoCima);
+			ManejadorFicheros.log("  AS>>>>         tablaSLR["+estadoCima+"]"+"["+simboloEntrada+"]");
 			Casilla c = this.tablaSLR[estadoCima][simboloEntrada];//siempre se empieza por el estado 0
-			ManejadorFicheros.log("AS>>>>         (c.op="+c.op+") (c.num="+c.num+") (c.accion="+c.accion+")");			
+			ManejadorFicheros.log("  AS>>>>         (c.op="+c.op+") (c.num="+c.num+") (c.accion="+c.accion+")");			
 			switch (c.op) {
 			case 0://ERROR SINTACTICO
 				error = true;
-				ManejadorFicheros.log("AS>>>>         ERROR");
+				ManejadorFicheros.log("  AS>>>>         ERROR");
 				break;
 			case 1://DESPLAZAR
-				ManejadorFicheros.log("AS>>>>         DESPLAZAR "+ c.num);
+				ManejadorFicheros.log("  AS>>>>         DESPLAZAR "+ c.num);
 				//1.1)meter simboloEntrada en la pila
 				pila.push(simboloEntrada);
-				ManejadorFicheros.log("AS>>>>         push simboloEntrada:"+simboloEntrada);
+				ManejadorFicheros.log("  AS>>>>         push simboloEntrada:"+simboloEntrada);
 				//1.2)meter "el estado al que se va segun la casilla" en la pila				
 				pila.push(c.num);
-				ManejadorFicheros.log("AS>>>>         push c.num:"+c.num);
+				ManejadorFicheros.log("  AS>>>>         push c.num:"+c.num);
 				//1.3)se pide el siguiente token al AL
 				token = AL.ejecutar(fr);
 				simboloEntrada = tokenToSimboloEntrada(token);				
 				break;
 			case 2://REDUCIR
-				ManejadorFicheros.log("AS>>>>         REDUCIR "+ c.num);				
+				ManejadorFicheros.log("  AS>>>>         REDUCIR "+ c.num);				
 				//2.1) sacar d*B simbolos de la pila
 				int B=0;
 				for(B=nSimbolos(c.num)*2;B>0;B--) {
 					int s = pila.pop();					
-					ManejadorFicheros.log("AS>>>>         pop:"+s);
+					ManejadorFicheros.log("  AS>>>>         pop:"+s);
 				}//for
-				//2) sea estadoCima el estado que está ahora en la cima de la pila
-				//estadoCima ya tiene la cima de la pila, no hace falta sacarlo otra vez, puede no haber nada
+				//2) sea estadoCima el estado que está ahora en la cima de la pila(despues del for)
+				estadoCima = pila.pop();
+				ManejadorFicheros.log("  AS>>>>         pop:"+estadoCima);
 				//3)meter A en la pila
 				pila.push(c.num);
-				ManejadorFicheros.log("AS>>>>         push:"+c.num);
+				ManejadorFicheros.log("  AS>>>>         push:"+c.num);
 				//4)obtener el GOTO y meter la regla de reducir en la pila
 				int simboloTerminal = nReglaToSimboloterminal(c.num);
-				ManejadorFicheros.log("AS>>>>         GOTO["+estadoCima+"]"+"["+simboloTerminal+"]");
+				ManejadorFicheros.log("  AS>>>>         GOTO["+estadoCima+"]"+"["+simboloTerminal+"]");
 				Casilla g=tablaSLR[estadoCima][simboloTerminal];
-				ManejadorFicheros.log("AS>>>>         (g.op="+g.op+") (g.num="+g.num+") (g.accion="+g.accion+")");
-				pila.push(c.num);
-				ManejadorFicheros.log("AS>>         push c.num:"+c.num);																
+				ManejadorFicheros.log("  AS>>>>         (g.op="+g.op+") (g.num="+g.num+") (g.accion="+g.accion+")");
+				pila.push(g.num);
+				ManejadorFicheros.log("  AS>>>>         push c.num:"+g.num);																
 				//5)se genera el parse correspondiente a esta regla (antes de que cambie)
 				reglasParse.add(c.num);
-				ManejadorFicheros.log("AS>>>>         Regla Parse: "+c.num);
+				ManejadorFicheros.log("  AS>>>>         Regla Parse: "+c.num);
 				
 				break;
 				
 			case 3://ACEPTAR
 				aceptar=true;
-				ManejadorFicheros.log("AS>>>>         ACEPTAR");
+				ManejadorFicheros.log("  AS>>>>         ACEPTAR");
 				break;
 			}//switch		
 		}//while					

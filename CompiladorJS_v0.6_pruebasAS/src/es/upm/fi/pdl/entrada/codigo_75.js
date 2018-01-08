@@ -1,3 +1,4 @@
 function int fun (chars cad){
-	print (cad);
+	prompt(cad);
+	return 0;
 }

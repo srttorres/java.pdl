@@ -36,7 +36,7 @@ public class PruebasSintactico{
 		  ManejadorFicheros.log("+Abriendo archivo para escritura: "+ rutaSalida);	   	   
 	  }
 	@Test
-	public void prueba_50_parse_simple() throws IOException {		
+	public void prueba_75_function() throws IOException {		
 		//ASin
 		FileWriter fw = ManejadorFicheros.getDescriptorSalida(rutaSalida);
 		FileReader fr = ManejadorFicheros.getDescriptorEntrada(rutaCarpetaEntrada+ficheroEntrada+numero+".js");

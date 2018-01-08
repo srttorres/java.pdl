@@ -14,6 +14,7 @@ public class AnalizadorLexico {
 	static FileWriter fw;
 	static Map<String, Integer> diccionarioPR;	
 	static TablaSimbolos tablaSimbolos = new TablaSimbolos();
+	static int tokenPreLeido;//aqui guardo los tokens que he leido sin querer
 	static final int  EOF 				= 1;
 	static final int  COMA 				= 3;
 	static final int  PYCOMA			= 4;
@@ -34,6 +35,7 @@ public class AnalizadorLexico {
 		 * CONSTRUCTOR
 		 */
 	public AnalizadorLexico() {
+		tokenPreLeido = 0;
 		caracteresRestantes = 0;
 		tokenEncontrado = false;		
 		diccionarioPR = new HashMap<String, Integer>();	//luego se recupera con get en el caso 23 de aplicarMatrizTransicion
@@ -65,11 +67,17 @@ public class AnalizadorLexico {
 		Estado estadoActual = new Estado();//empezamos en el estado 0
 		char [] siguienteCaracter = new char[1];
 		String lexema = null;
-		do {			
-			caracteresRestantes = fr.read(siguienteCaracter);
-			lexema = lexema+Character.toString(siguienteCaracter[0]);							
-			estadoActual = aplicarMatrizTransicion(siguienteCaracter[0], estadoActual, fr);
-			lexema = estadoActual.getLexema();			
+		do {
+			if (tokenPreLeido != 0) { //esto es la continuación del parche 229988
+				genToken(tokenPreLeido,null);
+				tokenPreLeido = 0;				
+			}
+			else {
+				caracteresRestantes = fr.read(siguienteCaracter);
+				lexema = lexema+Character.toString(siguienteCaracter[0]);							
+				estadoActual = aplicarMatrizTransicion(siguienteCaracter[0], estadoActual, fr);
+				lexema = estadoActual.getLexema();
+			}
 		}
 		while((caracteresRestantes != -1) && !tokenEncontrado );
 		if(tokenEncontrado) {
@@ -243,13 +251,21 @@ public class AnalizadorLexico {
 			}
 			break;//case 23			
 			
-		case 24:/** */
+		case 24:/** */			
 			if (!Character.isDigit(c) && otroCaracter(estadoActual,c)) {
 				if (estadoActual.getValor()>32767) {
 					genError(405);
 				}
 				else {
 					genToken(ENTERO,Integer.toString(estadoActual.getValor()));
+				}
+				if (c == ';') {//parche porque lee el caracter ; al comprobar si es otro caracter un entero.
+					//estadoSiguiente.setEstado(4);//parche 229988
+					//genToken(PYCOMA, null);break;//aqui no se puede generar el token, por eso lo guardo
+					tokenPreLeido = PYCOMA;
+				}
+				if (c == ','){
+					tokenPreLeido = COMA;
 				}
 			}
 			else {				
@@ -332,7 +348,7 @@ public class AnalizadorLexico {
 			}
 			break;//case 23
 		case 24:/**caso es digito */
-			if (ultimoCaracterLeido == ' ' || ultimoCaracterLeido == '=' || ultimoCaracterLeido == '+' || ultimoCaracterLeido == '&' || ultimoCaracterLeido == '(' || ultimoCaracterLeido == ')' || ultimoCaracterLeido == '{' || ultimoCaracterLeido == '}'|| ultimoCaracterLeido == '\n' || ultimoCaracterLeido == '\r') {
+			if (ultimoCaracterLeido == ' ' || ultimoCaracterLeido == '=' || ultimoCaracterLeido == '+' || ultimoCaracterLeido == '&' || ultimoCaracterLeido == '(' || ultimoCaracterLeido == ')' || ultimoCaracterLeido == '{' || ultimoCaracterLeido == '}'|| ultimoCaracterLeido == '\n' || ultimoCaracterLeido == '\r' || ultimoCaracterLeido == ';' || ultimoCaracterLeido == ',' ) {
 				esOtroCaracter = true;
 			}
 			break;//case 24
@@ -368,7 +384,7 @@ public class AnalizadorLexico {
 		switch (tokenID) {
 		case EOF: /*escribir token en tokenGenerado y en fichero salida*/;
 			tokenGenerado = new Token(EOF,null);
-			grabarToken();
+			grabarToken();//lo mete en el log
 			break;
 		case COMA:
 			tokenGenerado = new Token(COMA,null);
